@@ -1,2 +1,6 @@
 kserver
 =======
+
+linux
+epoll
+pthread
