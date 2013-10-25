@@ -23,30 +23,35 @@
 #define BG_DEFAULT  "\033[49m"
 #define RESET_COLOR    "\033[0m" /* to flush the previous property */
 
-#define LOG_INFO 1<<0 //1
-#define LOG_WARN 1<<1 //2
-#define LOG_ERROR 1<<2 //4
-#define LOG_DEBUG 1<<3 //8
-#define LOG_ALL 65535
+#define LOG_INFO (1<<0) //1
+#define LOG_WARN (1<<1) //2
+#define LOG_ERROR (1<<2) //4
+#define LOG_DEBUG (1<<3) //8
+#define LOG_ALL ((2<<16)-1)
 
-#define INFO(f...)    do { LOG_WRITER(LOG_INFO, __FILE__, __FUNCTION__, __LINE__, f); } while (0)
+#define INFO(f...)  do { LOG_WRITER(LOG_INFO, __FILE__, __FUNCTION__, __LINE__, f); } while (0)
 #define WARN(f...)  do { LOG_WRITER(LOG_WARN, __FILE__, __FUNCTION__, __LINE__, f); } while (0)
-#define ERROR(f...)  do { LOG_WRITER(LOG_ERROR, __FILE__, __FUNCTION__, __LINE__, f); } while (0)
-#define DEBUG(f...)  do { LOG_WRITER(LOG_DEBUG, __FILE__, __FUNCTION__, __LINE__, f); } while (0)
-#define DBG(l,f...)  do { LOG_WRITER(l, __FILE__, __FUNCTION__, __LINE__, f); } while (0)
+#define ERROR(f...) do { LOG_WRITER(LOG_ERROR, __FILE__, __FUNCTION__, __LINE__, f); } while (0)
+#define DEBUG(f...) do { LOG_WRITER(LOG_DEBUG, __FILE__, __FUNCTION__, __LINE__, f); } while (0)
+#define DBG(l,f...) do { LOG_WRITER(l, __FILE__, __FUNCTION__, __LINE__, f); } while (0)
 
 #define LOG_MAX_MSG_LEN 4098
 
-void *_20131025_log_device = NULL;
-int  _20131025_log_level = 1;
+static void *_20131025_log_device = NULL;
+static int  _20131025_log_level = 1;
 
-void LOG_INIT(const char *device);
+extern void LOG_INIT(const char *device);
+const char* LOG_SET_COLOR(int level, int is_end);
+extern void LOG_DESTORY();
+extern void LOG_LEVEL();
+static void LOG_ADD(int level, const char *file, const char * func, int line, const char *msg);
+static void LOG_WRITER(int level, const char *file, const char * func, int line, const char *fmt, ...);
+
 void LOG_INIT(const char *device)
 {
 	_20131025_log_device = !device ? stdout : fopen((const char *)device, "a+");
 }
-char* LOG_SET_COLOR(int level, int is_end);
-char* LOG_SET_COLOR(int level, int is_end)
+const char* LOG_SET_COLOR(int level, int is_end)
 {
 	if (_20131025_log_device == stdout) {
 		if (is_end) {
@@ -64,20 +69,18 @@ char* LOG_SET_COLOR(int level, int is_end)
 	return "";
 }
 
-void LOG_DESTORY();
 void LOG_DESTORY()
 {
 	if (_20131025_log_device != stdout) fclose(_20131025_log_device);
 }
-void LOG_LEVEL();
+
 void LOG_LEVEL(int level)
 {
 	_20131025_log_level = level;
 }
 
-void LOG_ADD(int level, const char *file, const char * func, int line, const char *msg);
 
-void LOG_ADD(int level, const char *file, const char * func, int line, const char *msg)
+static void LOG_ADD(int level, const char *file, const char * func, int line, const char *msg)
 {
     const char *c = "IWEDX";
     const char *datetime_format = "%Y-%m-%d %H:%M:%S";
@@ -99,8 +102,7 @@ void LOG_ADD(int level, const char *file, const char * func, int line, const cha
     fprintf(_20131025_log_device, "%s%s[%d][%s(%s):%d] %c, %s%s\n",LOG_SET_COLOR(level, 0) , buf, (int)getpid(), file, func, line, c[cl], msg ,LOG_SET_COLOR(level, 1));
 }
 
-void LOG_WRITER(int level, const char *file, const char * func, int line, const char *fmt, ...);
-void LOG_WRITER(int level, const char *file, const char * func, int line, const char *fmt, ...)
+static void LOG_WRITER(int level, const char *file, const char * func, int line, const char *fmt, ...)
 { 
     va_list ap;
     char msg[LOG_MAX_MSG_LEN];
@@ -116,8 +118,8 @@ int main(int argc, char *argv[])
 	int j;
 	LOG_INIT(NULL);
 	//LOG_INIT("a.log");
-	LOG_LEVEL(LOG_ALL);
-    for ( j = 0; j < 1; j++ ) {
+	LOG_LEVEL(1<<5);
+    for ( j = 0; j < 200000; j++ ) {
          INFO("INFO: %d", j);
          ERROR("ERROR: %d", j);
          DEBUG("DEBUG: %s", "dddd");   
