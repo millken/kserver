@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
 	LOG_INIT(NULL);
 	//LOG_INIT("a.log");
 	LOG_LEVEL(1<<5);
-    for ( j = 0; j < 200000; j++ ) {
+    for ( j = 0; j < 2; j++ ) {
          INFO("INFO: %d", j);
          ERROR("ERROR: %d", j);
          DEBUG("DEBUG: %s", "dddd");   
